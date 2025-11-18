@@ -13,6 +13,7 @@
 #include "include/base/cef_lock.h"
 #include "include/cef_base.h"
 #include "include/cef_client.h"
+#include "include/cef_audio_handler.h"
 
 #include "jni_scoped_helpers.h"
 #include "message_router_handler.h"
@@ -27,6 +28,7 @@ class ClientHandler : public CefClient {
   CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() override;
   CefRefPtr<CefDialogHandler> GetDialogHandler() override;
   CefRefPtr<CefDisplayHandler> GetDisplayHandler() override;
+  CefRefPtr<CefAudioHandler> GetAudioHandler() override;
   CefRefPtr<CefDownloadHandler> GetDownloadHandler() override;
   CefRefPtr<CefDragHandler> GetDragHandler() override;
   CefRefPtr<CefFocusHandler> GetFocusHandler() override;

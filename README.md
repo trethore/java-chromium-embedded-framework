@@ -4,7 +4,7 @@ The Java Chromium Embedded Framework (JCEF) is a simple framework for embedding 
 
 * Building JCEF - https://bitbucket.org/chromiumembedded/java-cef/wiki/BranchesAndBuilding
 * Support Forum - http://magpcss.org/ceforum/viewforum.php?f=17
-* Issue Tracker - https://github.com/chromiumembedded/java-cef/issues
+* Project Home / Issues - https://github.com/trethore/java-chromium-embedded-framework
 * Downloads - https://github.com/jcefmaven/jcefbuild
 * Maven/Gradle Artifacts - https://github.com/jcefmaven/jcefmaven
 * Donations - http://www.magpcss.org/ceforum/donate.php
@@ -26,11 +26,18 @@ This project provides a Java Wrapper for CEF (JCEF).
 
 The JCEF project is an extension of the Chromium Embedded Framework (CEF) project hosted at https://bitbucket.org/chromiumembedded/cef/. JCEF maintains a development branch that tracks the most recent CEF3 release branch. JCEF source code can be downloaded, built and packaged into a binary distribution. Once you have created the binary distribution for your platform you can distribute it as a stand-alone package without further dependencies on the JCEF, CEF or Chromium source code. Visit the [BranchesAndBuilding](https://bitbucket.org/chromiumembedded/java-cef/wiki/BranchesAndBuilding) Wiki page for detailed instructions.
 
+# Optional dependencies
+
+* LWJGL 3: only required if you use the direct input/audio helpers (`CefKeyEvent`, `CefMouseEvent`, `CefMouseWheelEvent`, `DataPointer`). Vanilla AWT/Swing usage does not require LWJGL. Example Gradle coordinates:
+  - `implementation "org.lwjgl:lwjgl:3.3.4"`
+  - Platform natives, e.g. `runtimeOnly "org.lwjgl:lwjgl:3.3.4:natives-windows"` plus `natives-linux` / `natives-macos` as needed.
+  - Minecraft already ships LWJGL 3, so mods running inside it typically don’t need to add these explicitly.
+
 # Helping Out
 
 JCEF is still very much a work in progress. Some ways that you can help out:
 
-\- Vote for issues in the [JCEF issue tracker](https://github.com/chromiumembedded/java-cef/issues) that are important to you. This helps with development prioritization.
+\- Vote for issues in the [project issue tracker](https://github.com/trethore/java-chromium-embedded-framework/issues) that are important to you. This helps with development prioritization.
 
 \- Report any bugs that you find or feature requests that are important to you. Make sure to first search for existing issues before creating new ones. Please use the [JCEF Forum](http://magpcss.org/ceforum/viewforum.php?f=17) and not the issue tracker for usage questions. Each JCEF issue should:
 
@@ -41,7 +48,7 @@ JCEF is still very much a work in progress. Some ways that you can help out:
 
 \- Write unit tests for new or existing functionality.
 
-\- Pull requests and patches are welcome. View open issues in the [JCEF issue tracker](https://github.com/chromiumembedded/java-cef/issues) or search for TODO(cef) in the source code for ideas.
+\- Pull requests and patches are welcome. View open issues in the [project issue tracker](https://github.com/trethore/java-chromium-embedded-framework/issues) or search for TODO(cef) in the source code for ideas.
 
 If you would like to contribute source code changes to JCEF please follow the below guidelines:
 
@@ -53,3 +60,7 @@ If you would like to contribute source code changes to JCEF please follow the be
 * Follow the style of existing JCEF source files. In general JCEF uses the [Chromium coding style](http://www.chromium.org/developers/coding-style).
 * Include new or modified unit tests as appropriate to the functionality.
 * Not include unnecessary or unrelated changes.
+
+# Upstream / Acknowledgments
+
+This fork is based on the upstream JCEF project maintained at https://github.com/chromiumembedded/java-cef and the Chromium Embedded Framework (CEF) project (https://bitbucket.org/chromiumembedded/cef/). Huge thanks to the upstream maintainers and contributors for their work. Pull requests and issues for this fork should be filed at https://github.com/trethore/java-chromium-embedded-framework.

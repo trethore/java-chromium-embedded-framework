@@ -11,6 +11,9 @@ import org.cef.callback.CefStringVisitor;
 import org.cef.handler.CefDialogHandler.FileDialogMode;
 import org.cef.handler.CefRenderHandler;
 import org.cef.handler.CefWindowHandler;
+import org.cef.event.CefKeyEvent;
+import org.cef.event.CefMouseEvent;
+import org.cef.event.CefMouseWheelEvent;
 import org.cef.misc.CefPdfPrintSettings;
 import org.cef.network.CefRequest;
 
@@ -377,6 +380,22 @@ public interface CefBrowser {
      * @param word replace selected word with this word.
      */
     public void replaceMisspelling(String word);
+
+    /**
+     * Send a key event directly without converting through AWT. Useful for
+     * embedders that receive raw input (e.g. LWJGL/GLFW).
+     */
+    public void sendKeyEvent(CefKeyEvent event);
+
+    /**
+     * Send a mouse event directly without converting through AWT.
+     */
+    public void sendMouseEvent(CefMouseEvent event);
+
+    /**
+     * Send a high-resolution mouse wheel event directly without converting through AWT.
+     */
+    public void sendMouseWheelEvent(CefMouseWheelEvent event);
 
     /**
      * Captures a screenshot-like image of the currently displayed content and returns it.
