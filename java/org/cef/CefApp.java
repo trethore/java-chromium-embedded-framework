@@ -401,7 +401,15 @@ public class CefApp extends CefAppHandlerAdapter {
 
                     // Avoid to override user values by testing on NULL
                     if (OS.isMacintosh()) {
-                        Path base = Paths.get(library_path).getParent().getParent();
+                        Path libPath = Paths.get(library_path);
+                        Path parent = libPath.getParent();
+                        if (parent == null) {
+                            throw new IllegalStateException("library_path has no parent: " + library_path);
+                        }
+                        Path base = parent.getParent();
+                        if (base == null) {
+                            throw new IllegalStateException("library_path parent has no parent: " + library_path);
+                        }
                         if (settings.browser_subprocess_path == null) {
                             Path path = base.resolve("Frameworks/jcef Helper.app/Contents/MacOS/jcef Helper");
                             settings.browser_subprocess_path = path.normalize().toAbsolutePath().toString();

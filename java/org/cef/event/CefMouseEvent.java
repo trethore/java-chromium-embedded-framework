@@ -23,7 +23,11 @@ public class CefMouseEvent {
     private int y;
     private int modifiers;
     private int clickCount;
-    /** Button number (1/2/3) for press/release events. */
+    /**
+     * Button number for press/release events.
+     * Accepts AWT-style 1/2/3 or GLFW_MOUSE_BUTTON_1/2/3 (0/1/2); all are
+     * normalized in native code to left/middle/right.
+     */
     private int button;
 
     public CefMouseEvent(int id, int x, int y, int clickCount, int button, int modifiers) {

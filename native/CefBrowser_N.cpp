@@ -43,6 +43,14 @@
 
 namespace {
 
+// AWT mouse event ids (mirrors java.awt.event.MouseEvent)
+constexpr int kAwtMousePressed = 501;
+constexpr int kAwtMouseReleased = 502;
+constexpr int kAwtMouseMoved = 503;
+constexpr int kAwtMouseEntered = 504;
+constexpr int kAwtMouseExited = 505;
+constexpr int kAwtMouseDragged = 506;
+
 int GetCefModifiers(JNIEnv* env, jclass cls, int modifiers) {
   JNI_STATIC_DEFINE_INT_RV(env, cls, ALT_DOWN_MASK, 0);
   JNI_STATIC_DEFINE_INT_RV(env, cls, BUTTON1_DOWN_MASK, 0);
@@ -2328,7 +2336,7 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEventDirect(JNIEnv* env,
     cef_event.type = KEYEVENT_KEYUP;
   } else if (event_type == JNI_STATIC(GLFW_REPEAT)) {
 #if defined(OS_WIN)
-    cef_event.windows_key_code = key_char;
+    cef_event.windows_key_code = VkCode;
     cef_event.unmodified_character = key_char;
     cef_event.character = key_char;
 #endif
@@ -2373,8 +2381,8 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendMouseEventDirect(JNIEnv* env,
 
   const bool is_glfw_press = (event_type == JNI_STATIC(GLFW_PRESS));
   const bool is_glfw_release = (event_type == JNI_STATIC(GLFW_RELEASE));
-  const bool is_awt_press = (event_type == 501);   // MOUSE_PRESSED
-  const bool is_awt_release = (event_type == 502); // MOUSE_RELEASED
+  const bool is_awt_press = (event_type == kAwtMousePressed);
+  const bool is_awt_release = (event_type == kAwtMouseReleased);
 
   if (is_glfw_press || is_glfw_release || is_awt_press || is_awt_release) {
     int button, click_count;
@@ -2385,11 +2393,12 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendMouseEventDirect(JNIEnv* env,
     }
 
     CefBrowserHost::MouseButtonType cef_mbt;
-    if (button == JNI_STATIC(GLFW_MOUSE_BUTTON_1))
+    // Accept both GLFW constants (0/1/2) and AWT-style 1/2/3.
+    if (button == JNI_STATIC(GLFW_MOUSE_BUTTON_1) || button == 1)
       cef_mbt = MBT_LEFT;
-    else if (button == JNI_STATIC(GLFW_MOUSE_BUTTON_2))
+    else if (button == JNI_STATIC(GLFW_MOUSE_BUTTON_2) || button == 2)
       cef_mbt = MBT_MIDDLE;
-    else if (button == JNI_STATIC(GLFW_MOUSE_BUTTON_3))
+    else if (button == JNI_STATIC(GLFW_MOUSE_BUTTON_3) || button == 3)
       cef_mbt = MBT_RIGHT;
     else
       return;
@@ -2397,12 +2406,12 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendMouseEventDirect(JNIEnv* env,
     browser->GetHost()->SendMouseClickEvent(
         cef_event, cef_mbt, (is_glfw_release || is_awt_release),
         click_count);
-  } else if (event_type == 503 ||  // MOUSE_MOVED
-             event_type == 506 ||  // MOUSE_DRAGGED
-             event_type == 504 ||  // MOUSE_ENTERED
-             event_type == 505) {  // MOUSE_EXITED
+  } else if (event_type == kAwtMouseMoved ||
+             event_type == kAwtMouseDragged ||
+             event_type == kAwtMouseEntered ||
+             event_type == kAwtMouseExited) {
     browser->GetHost()->SendMouseMoveEvent(
-        cef_event, (event_type == 505));  // exited
+        cef_event, (event_type == kAwtMouseExited));
   }
 }
 

@@ -44,6 +44,10 @@ public class DataPointer {
         return address;
     }
 
+    /**
+     * Read a pointer-sized value at the given element offset and wrap it as a
+     * new DataPointer (useful for buffers that contain arrays of native pointers).
+     */
     public DataPointer getData(int offset) {
         ensureInitialized();
         return new DataPointer(dataBuffer.getLong(offset << alignment));

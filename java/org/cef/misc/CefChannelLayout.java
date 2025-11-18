@@ -46,11 +46,21 @@ public enum CefChannelLayout {
         this.id = id;
     }
 
-    private static final CefChannelLayout[] LAYOUTS = CefChannelLayout.values();
+    // Map layout id (from CEF enum values) to enum instance. Some ids are not
+    // contiguous and CEF_CHANNEL_LAYOUT_MAX shares id 33, so indexing by ordinal
+    // would return the wrong value for duplicate ids.
+    private static final java.util.Map<Integer, CefChannelLayout> ID_MAP =
+            new java.util.HashMap<>();
+    static {
+        for (CefChannelLayout layout : CefChannelLayout.values()) {
+            // Keep first occurrence for duplicate ids.
+            ID_MAP.putIfAbsent(layout.id, layout);
+        }
+    }
 
     public static CefChannelLayout forId(int id) {
-        if (id < 0 || id >= LAYOUTS.length) return CEF_CHANNEL_LAYOUT_UNSUPPORTED;
-        return LAYOUTS[id];
+        CefChannelLayout layout = ID_MAP.get(id);
+        return layout != null ? layout : CEF_CHANNEL_LAYOUT_UNSUPPORTED;
     }
 
     public int getId() {
