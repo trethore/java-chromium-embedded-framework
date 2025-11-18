@@ -1240,6 +1240,32 @@ bool CallJNIMethodD_V(JNIEnv* env,
   return false;
 }
 
+bool CallStaticJNIMethodII_V(JNIEnv* env,
+                             jclass cls,
+                             const char* method_name,
+                             int* value,
+                             int arg) {
+  jmethodID methodID = env->GetStaticMethodID(cls, method_name, "(I)I");
+  if (methodID) {
+    *value = env->CallStaticIntMethod(cls, methodID, arg);
+    return true;
+  }
+  env->ExceptionClear();
+  return false;
+}
+
+bool CallStaticJNIMethodII_V(JNIEnv* env,
+                             jclass cls,
+                             const char* method_name,
+                             jlong* value,
+                             int arg) {
+  int temp = 0;
+  if (!CallStaticJNIMethodII_V(env, cls, method_name, &temp, arg))
+    return false;
+  *value = static_cast<jlong>(temp);
+  return true;
+}
+
 bool CallJNIMethodC_V(JNIEnv* env,
                       jclass cls,
                       jobject obj,
