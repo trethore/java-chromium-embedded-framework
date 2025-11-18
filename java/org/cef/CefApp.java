@@ -133,6 +133,7 @@ public class CefApp extends CefAppHandlerAdapter {
     private Timer workTimer_ = null;
     private HashSet<CefClient> clients_ = new HashSet<CefClient>();
     private CefSettings settings_ = null;
+    private Runnable macOSTerminationRequestRunnable = null;
 
     /**
      * To get an instance of this class, use the method
@@ -400,11 +401,39 @@ public class CefApp extends CefAppHandlerAdapter {
 
                     // Avoid to override user values by testing on NULL
                     if (OS.isMacintosh()) {
+                        Path libPath = Paths.get(library_path);
+                        Path parent = libPath.getParent();
+                        if (parent == null) {
+                            throw new IllegalStateException("library_path has no parent: " + library_path);
+                        }
+                        Path base = parent.getParent();
+                        if (base == null) {
+                            throw new IllegalStateException("library_path parent has no parent: " + library_path);
+                        }
                         if (settings.browser_subprocess_path == null) {
-                            Path path = Paths.get(library_path,
-                                    "../Frameworks/jcef Helper.app/Contents/MacOS/jcef Helper");
-                            settings.browser_subprocess_path =
-                                    path.normalize().toAbsolutePath().toString();
+                            Path path = base.resolve("Frameworks/jcef Helper.app/Contents/MacOS/jcef Helper");
+                            settings.browser_subprocess_path = path.normalize().toAbsolutePath().toString();
+                        }
+                        if (settings.framework_dir_path == null) {
+                            Path path = base.resolve("Frameworks/Chromium Embedded Framework.framework");
+                            settings.framework_dir_path = path.normalize().toAbsolutePath().toString();
+                        }
+                        if (settings.main_bundle_path == null) {
+                            settings.main_bundle_path = base.normalize().toAbsolutePath().toString();
+                        }
+                        if (settings.resources_dir_path == null) {
+                            settings.resources_dir_path = Paths
+                                    .get(settings.framework_dir_path, "Resources")
+                                    .normalize()
+                                    .toAbsolutePath()
+                                    .toString();
+                        }
+                        if (settings.locales_dir_path == null) {
+                            settings.locales_dir_path = Paths
+                                    .get(settings.framework_dir_path, "Resources", "locales")
+                                    .normalize()
+                                    .toAbsolutePath()
+                                    .toString();
                         }
                     } else if (OS.isWindows()) {
                         if (settings.browser_subprocess_path == null) {
@@ -447,6 +476,14 @@ public class CefApp extends CefAppHandlerAdapter {
     }
 
     /**
+     * Set a hook that runs when macOS sends a termination request (Cmd+Q) before
+     * the default onBeforeTerminate logic executes. No-op if null.
+     */
+    public void setMacOSTerminationRequestRunnable(Runnable runnable) {
+        macOSTerminationRequestRunnable = runnable;
+    }
+
+    /**
      * This method is invoked by the native code (currently on Mac only) in case
      * of a termination event (e.g. someone pressed CMD+Q).
      */
@@ -457,6 +494,9 @@ public class CefApp extends CefAppHandlerAdapter {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                if (macOSTerminationRequestRunnable != null) {
+                    macOSTerminationRequestRunnable.run();
+                }
                 CefAppHandler handler =
                         (CefAppHandler) ((appHandler_ == null) ? this : appHandler_);
                 if (!handler.onBeforeTerminate()) dispose();

@@ -196,6 +196,27 @@ bool CallJNIMethodI_V(JNIEnv* env,
                       const char* method_name,
                       int* value);
 
+// Call a JNI method that returns a double and accepts no arguments.
+bool CallJNIMethodD_V(JNIEnv* env,
+                      jclass cls,
+                      jobject obj,
+                      const char* method_name,
+                      double* value);
+
+// Call a static JNI method that returns an int and accepts one int argument.
+bool CallStaticJNIMethodII_V(JNIEnv* env,
+                             jclass cls,
+                             const char* method_name,
+                             int* value,
+                             int arg);
+
+// Overload for retrieving into jlong to avoid pointer casts at call sites.
+bool CallStaticJNIMethodII_V(JNIEnv* env,
+                             jclass cls,
+                             const char* method_name,
+                             jlong* value,
+                             int arg);
+
 // Call a JNI method that returns a char and accepts no arguments.
 bool CallJNIMethodC_V(JNIEnv* env,
                       jclass cls,

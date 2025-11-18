@@ -211,6 +211,18 @@ public class CefSettings {
     public String locales_dir_path = null;
 
     /**
+     * (MacOS only) Path to the CEF.framework directory. If empty defaults to the
+     * bundle Frameworks/Chromium Embedded Framework.framework path.
+     */
+    public String framework_dir_path = null;
+
+    /**
+     * (MacOS only) Path to the main app bundle. If empty defaults to the bundle
+     * root detected at runtime.
+     */
+    public String main_bundle_path = null;
+
+    /**
      * Set to a value between 1024 and 65535 to enable remote debugging on the
      * specified port. For example, if 8080 is specified the remote debugging URL
      * will be http: *localhost:8080. CEF can be remotely debugged from any CEF or
@@ -284,6 +296,8 @@ public class CefSettings {
         tmp.javascript_flags = javascript_flags;
         tmp.resources_dir_path = resources_dir_path;
         tmp.locales_dir_path = locales_dir_path;
+        tmp.framework_dir_path = framework_dir_path;
+        tmp.main_bundle_path = main_bundle_path;
         tmp.remote_debugging_port = remote_debugging_port;
         tmp.chrome_policy_id = chrome_policy_id;
         tmp.uncaught_exception_stack_size = uncaught_exception_stack_size;

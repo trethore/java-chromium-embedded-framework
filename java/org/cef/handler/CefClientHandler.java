@@ -7,6 +7,7 @@ package org.cef.handler;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefMessageRouter;
 import org.cef.callback.CefNative;
+import org.cef.handler.CefAudioHandler;
 
 import java.util.HashMap;
 import java.util.Vector;
@@ -87,6 +88,11 @@ public abstract class CefClientHandler implements CefNative {
      * the native code.
      */
     abstract protected CefDisplayHandler getDisplayHandler();
+
+    /**
+     * Return the handler for audio callbacks.
+     */
+    abstract protected CefAudioHandler getAudioHandler();
 
     /**
      * Return the handler for download events.

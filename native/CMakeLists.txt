@@ -82,6 +82,8 @@ set(JCEF_SRCS
   completion_callback.h
   context.cpp
   context.h
+  audio_handler.cpp
+  audio_handler.h
   context_menu_handler.cpp
   context_menu_handler.h
   cookie_access_filter.cpp
