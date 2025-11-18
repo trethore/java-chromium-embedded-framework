@@ -196,6 +196,13 @@ bool CallJNIMethodI_V(JNIEnv* env,
                       const char* method_name,
                       int* value);
 
+// Call a JNI method that returns a double and accepts no arguments.
+bool CallJNIMethodD_V(JNIEnv* env,
+                      jclass cls,
+                      jobject obj,
+                      const char* method_name,
+                      double* value);
+
 // Call a JNI method that returns a char and accepts no arguments.
 bool CallJNIMethodC_V(JNIEnv* env,
                       jclass cls,
