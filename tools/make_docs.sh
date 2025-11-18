@@ -7,7 +7,12 @@ DIR="$( cd "$( dirname "$0" )" && cd .. && pwd )"
 OUT_PATH="${DIR}/out/docs"
 JOGAMP_CP="${DIR}/third_party/jogamp/jar/*"
 JUNIT_CP="${DIR}/third_party/junit/*"
-DOC_CLASSPATH="${JOGAMP_CP}:${JUNIT_CP}"
-
+# Set classpath separator based on platform
+if [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+  CP_SEP=";"
+else
+  CP_SEP=":"
+fi
+DOC_CLASSPATH="${JOGAMP_CP}${CP_SEP}${JUNIT_CP}"
 javadoc --ignore-source-errors -Xdoclint:none -classpath "$DOC_CLASSPATH" -windowtitle "CEF3 Java API Docs" -footer "<center><a href="https://bitbucket.org/chromiumembedded/java-cef" target="_top">Chromium Embedded Framework (CEF)</a> Copyright &copy 2013 Marshall A. Greenblatt</center>" -nodeprecated -d "$OUT_PATH" -sourcepath "${DIR}/java" -link http://docs.oracle.com/javase/7/docs/api/ -subpackages org.cef
 
