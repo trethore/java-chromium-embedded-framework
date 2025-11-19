@@ -177,26 +177,15 @@ find_package(CEF REQUIRED)
 #
 # Python configuration.
 #
-
-# Support specification of the Python executable path via the command-line.
+# Require Python 3.10+ and prefer the modern FindPython3 module. Allow override
+# via the legacy PYTHON_EXECUTABLE env var to ease scripted builds.
 if(DEFINED ENV{PYTHON_EXECUTABLE})
-  file(TO_CMAKE_PATH "$ENV{PYTHON_EXECUTABLE}" PYTHON_EXECUTABLE)
+  file(TO_CMAKE_PATH "$ENV{PYTHON_EXECUTABLE}" Python3_EXECUTABLE)
 endif()
 
-if(NOT PYTHON_EXECUTABLE)
-  unset(PYTHON_EXECUTABLE)
+find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
 
-  # Find the python interpreter.
-  find_package(PythonInterp)
-
-  if(NOT ${PYTHONINTERP_FOUND})
-    message(FATAL_ERROR "A Python installation is required. Set the "
-                        "PYTHON_EXECUTABLE environment variable to explicitly "
-                        "specify the Python executable path.")
-  endif()
-endif()
-
-message(STATUS "Using Python: ${PYTHON_EXECUTABLE}")
+message(STATUS "Using Python: ${Python3_EXECUTABLE}")
 
 
 #
@@ -204,7 +193,7 @@ message(STATUS "Using Python: ${PYTHON_EXECUTABLE}")
 #
 
 # Minimum required Java version.
-set(JDK_MIN_VERSION 1.7)
+set(JDK_MIN_VERSION 17)
 
 set(JAVA_FATAL_ERROR "A Java installation is required. Set the JAVA_HOME "
                      "environment variable to explicitly specify the Java "
@@ -243,7 +232,7 @@ endif()
 # Generate the JCEF version header.
 message(STATUS "Generating native/jcef_version.h file...")
 execute_process(
-  COMMAND "${PYTHON_EXECUTABLE}"
+  COMMAND "${Python3_EXECUTABLE}"
           "tools/make_version_header.py"
           "--header"
           "native/jcef_version.h"
@@ -281,7 +270,7 @@ endif()
 
 message(STATUS "Downloading clang-format from Google Storage...")
 execute_process(
-  COMMAND "${PYTHON_EXECUTABLE}"
+  COMMAND "${Python3_EXECUTABLE}"
           "tools/buildtools/download_from_google_storage.py"
           "--no_resume"
           "--platform=${GS_PLATFORM}"
@@ -312,7 +301,7 @@ add_subdirectory(native)
 PRINT_CEF_CONFIG()
 
 message(STATUS "*** JCEF CONFIGURATION SETTINGS ***")
-message(STATUS "Python executable:            ${PYTHON_EXECUTABLE}")
+message(STATUS "Python executable:            ${Python3_EXECUTABLE}")
 message(STATUS "Java directory:               ${JAVA_DIR}")
 message(STATUS "JNI libraries:                ${JNI_LIBRARIES}")
 message(STATUS "JNI include directories:      ${JNI_INCLUDE_DIRS}")

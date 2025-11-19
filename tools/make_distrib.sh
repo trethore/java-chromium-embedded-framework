@@ -29,7 +29,7 @@ else
   cp -rf "$OUT_DOCS_PATH" "$DISTRIB_DOCS_PATH"
 
   # Create README.txt
-  python "${DIR}"/tools/make_readme.py --output-dir "$DISTRIB_PATH/" --platform $DISTRIB_PLATFORM
+  python3 "${DIR}"/tools/make_readme.py --output-dir "$DISTRIB_PATH/" --platform $DISTRIB_PLATFORM
 
   # Copy miscellaneous files to the root directory.
   cp -f "${DIR}"/LICENSE.txt "$DISTRIB_PATH"

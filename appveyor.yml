@@ -19,10 +19,10 @@ environment:
   matrix:
   - buildType: win32
     generatorName: Visual Studio 14
-    JAVA_HOME: C:\Program Files (x86)\Java\jdk1.8.0
+    JAVA_HOME: C:\Program Files\Java\jdk-17
   - buildType: win64
     generatorName: Visual Studio 14 Win64
-    JAVA_HOME: C:\Program Files\Java\jdk1.8.0
+    JAVA_HOME: C:\Program Files\Java\jdk-17
 
 matrix:
   exclude:

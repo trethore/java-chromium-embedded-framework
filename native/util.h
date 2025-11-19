@@ -52,9 +52,6 @@
 
 #if defined(OS_MACOSX)
 
-// due a missing export definition within Java 7u40 (and prior)
-// for Mac OS X, we have to redefine JNIEXPORT.
-// Otherwise the JNI function names wouldn't be exported to libjcef
 #ifdef JNIEXPORT
 #undef JNIEXPORT
 #define JNIEXPORT __attribute__((visibility("default")))

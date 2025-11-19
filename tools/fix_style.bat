@@ -1,2 +1,2 @@
 @echo off
-python tools\fix_style.py %*
+python3 tools\fix_style.py %*

@@ -157,42 +157,7 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
                     depth = config.getColorModel().getPixelSize();
                     depth_per_component = config.getColorModel().getComponentSize()[0];
 
-                    if (OS.isMacintosh()
-                            && System.getProperty("java.runtime.version").startsWith("1.8")) {
-                        // This fixes a weird thing on MacOS: the scale factor being read from
-                        // getTransform().getScaleX() is incorrect for Java 8 VMs; it is always
-                        // 1, even though Retina display scaling of window sizes etc. is
-                        // definitely ongoing somewhere in the lower levels of AWT. This isn't
-                        // too big of a problem for us, because the transparent scaling handles
-                        // the situation, except for one thing: the screenshot-grabbing
-                        // code below, which reads from the OpenGL context, must know the real
-                        // scale factor, because the image to be read is larger by that factor
-                        // and thus a bigger buffer is required. This is why there's some
-                        // admittedly-ugly reflection magic going on below that's able to get
-                        // the real scale factor.
-                        // All of this is not relevant for either Windows or MacOS JDKs > 8,
-                        // for which the official "getScaleX()" approach works fine.
-                        try {
-                            if (scaleFactorAccessor == null) {
-                                scaleFactorAccessor = getClass()
-                                                              .getClassLoader()
-                                                              .loadClass("sun.awt.CGraphicsDevice")
-                                                              .getDeclaredMethod("getScaleFactor");
-                            }
-                            Object factor = scaleFactorAccessor.invoke(config.getDevice());
-                            if (factor instanceof Integer) {
-                                scaleFactor_ = ((Integer) factor).doubleValue();
-                            } else {
-                                scaleFactor_ = 1.0;
-                            }
-                        } catch (InvocationTargetException | IllegalAccessException
-                                | IllegalArgumentException | NoSuchMethodException
-                                | SecurityException | ClassNotFoundException exc) {
-                            scaleFactor_ = 1.0;
-                        }
-                    } else {
-                        scaleFactor_ = ((Graphics2D) g).getTransform().getScaleX();
-                    }
+                    scaleFactor_ = ((Graphics2D) g).getTransform().getScaleX();
                 }
                 super.paint(g);
             }
