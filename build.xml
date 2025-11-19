@@ -26,6 +26,11 @@
     <javac encoding="UTF8" nowarn="on" deprecation="off" debug="on" includeantruntime="false" destdir="${out.path}"
            fork="true" memoryinitialsize="32m" memorymaximumsize="128m" release="17">
       <compilerarg value="-XDignore.symbol.file"/>
+      <!-- Allow access to non-exported AWT classes required by the macOS glue code on JDK17+. -->
+      <compilerarg value="--add-exports=java.desktop/java.awt.peer=ALL-UNNAMED"/>
+      <compilerarg value="--add-exports=java.desktop/sun.awt=ALL-UNNAMED"/>
+      <compilerarg value="--add-exports=java.desktop/sun.lwawt=ALL-UNNAMED"/>
+      <compilerarg value="--add-exports=java.desktop/sun.lwawt.macosx=ALL-UNNAMED"/>
       <classpath refid="class.path"/>
       <src path="java/tests/"/>
       <src path="java/org/cef/"/>

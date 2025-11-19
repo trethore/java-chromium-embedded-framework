@@ -14,5 +14,12 @@ else
   CP_SEP=":"
 fi
 DOC_CLASSPATH="${JOGAMP_CP}${CP_SEP}${JUNIT_CP}"
-javadoc --ignore-source-errors -Xdoclint:none -classpath "$DOC_CLASSPATH" -windowtitle "CEF3 Java API Docs" -footer "<center><a href="https://bitbucket.org/chromiumembedded/java-cef" target="_top">Chromium Embedded Framework (CEF)</a> Copyright &copy 2013 Marshall A. Greenblatt</center>" -nodeprecated -d "$OUT_PATH" -sourcepath "${DIR}/java" -link http://docs.oracle.com/javase/7/docs/api/ -subpackages org.cef
-
+javadoc --ignore-source-errors -Xdoclint:none \
+  --add-exports=java.desktop/java.awt.peer=ALL-UNNAMED \
+  --add-exports=java.desktop/sun.awt=ALL-UNNAMED \
+  --add-exports=java.desktop/sun.lwawt=ALL-UNNAMED \
+  --add-exports=java.desktop/sun.lwawt.macosx=ALL-UNNAMED \
+  -classpath "$DOC_CLASSPATH" \
+  -windowtitle "CEF3 Java API Docs" \
+  -footer "<center><a href=\"https://bitbucket.org/chromiumembedded/java-cef\" target=\"_top\">Chromium Embedded Framework (CEF)</a> Copyright &copy 2013 Marshall A. Greenblatt</center>" \
+  -nodeprecated -d "$OUT_PATH" -sourcepath "${DIR}/java" -link http://docs.oracle.com/javase/7/docs/api/ -subpackages org.cef

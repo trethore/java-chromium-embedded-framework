@@ -31,6 +31,8 @@ public interface CefResourceHandler {
      *         information is available.
      * @deprecated Use open() instead
      */
+    @Deprecated
+
     boolean processRequest(CefRequest request, CefCallback callback);
 
     /**
@@ -70,6 +72,8 @@ public interface CefResourceHandler {
      * @return True if more data is or will be available.
      * @deprecated Use read() instead
      */
+    @Deprecated
+
     boolean readResponse(byte[] dataOut, int bytesToRead, IntRef bytesRead, CefCallback callback);
 
     /**
