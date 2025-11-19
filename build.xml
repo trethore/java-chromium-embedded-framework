@@ -24,7 +24,7 @@
   <target name="compile">
     <mkdir dir="${out.path}"/>
     <javac encoding="UTF8" nowarn="on" deprecation="off" debug="on" includeantruntime="false" destdir="${out.path}"
-           fork="true" memoryinitialsize="32m" memorymaximumsize="128m" release="17">
+           fork="true" memoryinitialsize="32m" memorymaximumsize="128m" source="17" target="17">
       <compilerarg value="-XDignore.symbol.file"/>
       <!-- Allow access to non-exported AWT classes required by the macOS glue code on JDK17+. -->
       <compilerarg value="--add-exports=java.desktop/java.awt.peer=ALL-UNNAMED"/>
