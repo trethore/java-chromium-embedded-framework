@@ -11,12 +11,22 @@ import org.cef.handler.CefLoadHandler.ErrorCode;
 class CefURLRequest_N extends CefURLRequest implements CefNative {
     // Used internally to store a pointer to the CEF object.
     private long N_CefHandle = 0;
+    private static final class NativeDisposer {
+        private static final CefURLRequest_N INVOKER = new CefURLRequest_N(false);
+
+        private static void dispose(long handle) {
+            if (handle != 0) {
+                INVOKER.disposeHandle(handle);
+            }
+        }
+    }
     private final CefRequest request_;
     private final CefURLRequestClient client_;
 
     @Override
     public void setNativeRef(String identifer, long nativeRef) {
         N_CefHandle = nativeRef;
+        getCleanup().setHandle(nativeRef);
     }
 
     @Override
@@ -25,9 +35,17 @@ class CefURLRequest_N extends CefURLRequest implements CefNative {
     }
 
     CefURLRequest_N(CefRequest request, CefURLRequestClient client) {
-        super();
+        this(request, client, true);
+    }
+
+    private CefURLRequest_N(CefRequest request, CefURLRequestClient client, boolean registerCleaner) {
+        super(new org.cef.misc.NativeCleanup(NativeDisposer::dispose), registerCleaner);
         request_ = request;
         client_ = client;
+    }
+
+    private CefURLRequest_N(boolean registerCleaner) {
+        this(null, null, registerCleaner);
     }
 
     public static final CefURLRequest createNative(CefRequest request, CefURLRequestClient client) {
@@ -42,10 +60,9 @@ class CefURLRequest_N extends CefURLRequest implements CefNative {
         return result;
     }
 
-    @Override
-    public void dispose() {
+    private void disposeHandle(long handle) {
         try {
-            N_Dispose(N_CefHandle);
+            N_Dispose(handle);
         } catch (UnsatisfiedLinkError ule) {
             ule.printStackTrace();
         }

@@ -5,6 +5,7 @@
 package org.cef.browser;
 
 import org.cef.callback.CefNativeAdapter;
+import org.cef.misc.NativeCleanup;
 
 /**
  * This class represents all methods which are connected to the
@@ -12,18 +13,34 @@ import org.cef.callback.CefNativeAdapter;
  * The visibility of this class is "package".
  */
 class CefFrame_N extends CefNativeAdapter implements CefFrame {
-    CefFrame_N() {}
+    private static final class NativeDisposer {
+        private static final CefFrame_N INVOKER = new CefFrame_N(false);
 
-    @Override
-    protected void finalize() throws Throwable {
-        dispose();
-        super.finalize();
+        private static void dispose(long handle) {
+            if (handle != 0) {
+                INVOKER.disposeHandle(handle);
+            }
+        }
+    }
+
+    CefFrame_N() {
+        this(true);
+    }
+
+    private CefFrame_N(boolean registerCleaner) {
+        super(new NativeCleanup(NativeDisposer::dispose), registerCleaner);
     }
 
     @Override
     public void dispose() {
+        getCleanup().markCleaned();
+        disposeHandle(getNativeRef(null));
+        getCleanup().clearHandle();
+    }
+
+    private void disposeHandle(long handle) {
         try {
-            N_Dispose(getNativeRef(null));
+            N_Dispose(handle);
         } catch (UnsatisfiedLinkError ule) {
             ule.printStackTrace();
         }

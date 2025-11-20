@@ -6,15 +6,18 @@ package org.cef.network;
 
 import org.cef.callback.CefURLRequestClient;
 import org.cef.handler.CefLoadHandler.ErrorCode;
+import org.cef.misc.CefCleaner;
+import org.cef.misc.NativeCleanup;
 
 /**
- * Class used to make a URL request. URL requests are not associated with a
- * browser instance so no CefClient callbacks will be executed. URL requests
- * can be created on any valid CEF thread in either the browser or render
- * process. Once created the methods of the URL request object must be accessed
- * on the same thread that created it.
+ * Class used to make a URL request. URL requests are not associated with a browser instance so no
+ * CefClient callbacks will be executed. URL requests can be created on any valid CEF thread in
+ * either the browser or render process. Once created the methods of the URL request object must be
+ * accessed on the same thread that created it.
  */
-public abstract class CefURLRequest {
+public abstract class CefURLRequest implements AutoCloseable {
+    private final NativeCleanup cleanup;
+    private final java.lang.ref.Cleaner.Cleanable cleanable;
     public static enum Status {
         UR_UNKNOWN,
         UR_SUCCESS,
@@ -24,12 +27,18 @@ public abstract class CefURLRequest {
     }
 
     // This CTOR can't be called directly. Call method create() instead.
-    CefURLRequest() {}
+    CefURLRequest(NativeCleanup cleanup) {
+        this(cleanup, true);
+    }
+
+    CefURLRequest(NativeCleanup cleanup, boolean registerCleaner) {
+        this.cleanup = cleanup;
+        cleanable = registerCleaner ? CefCleaner.register(this, cleanup) : CefCleaner.noop();
+    }
 
     @Override
-    protected void finalize() throws Throwable {
-        dispose();
-        super.finalize();
+    public final void close() {
+        cleanable.clean();
     }
 
     /**
@@ -51,7 +60,16 @@ public abstract class CefURLRequest {
     /**
      * Removes the native reference from an unused object.
      */
-    public abstract void dispose();
+    public final void dispose() {
+        cleanable.clean();
+    }
+
+    /**
+     * Provides cleanup access for subclasses to update the native handle.
+     */
+    protected final NativeCleanup getCleanup() {
+        return cleanup;
+    }
 
     /**
      * Returns the request object used to create this URL request. The returned

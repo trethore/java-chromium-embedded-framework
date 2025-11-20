@@ -6,6 +6,8 @@ package org.cef.network;
 
 import org.cef.callback.CefCompletionCallback;
 import org.cef.callback.CefCookieVisitor;
+import org.cef.misc.CefCleaner;
+import org.cef.misc.NativeCleanup;
 
 import java.util.Vector;
 
@@ -13,14 +15,23 @@ import java.util.Vector;
  * Class used for managing cookies. The methods of this class may be called on any thread unless
  * otherwise indicated.
  */
-public abstract class CefCookieManager {
+public abstract class CefCookieManager implements AutoCloseable {
+    private final NativeCleanup cleanup;
+    private final java.lang.ref.Cleaner.Cleanable cleanable;
+
     // This CTOR can't be called directly. Call method create() instead.
-    CefCookieManager() {}
+    CefCookieManager(NativeCleanup cleanup) {
+        this(cleanup, true);
+    }
+
+    CefCookieManager(NativeCleanup cleanup, boolean registerCleaner) {
+        this.cleanup = cleanup;
+        cleanable = registerCleaner ? CefCleaner.register(this, cleanup) : CefCleaner.noop();
+    }
 
     @Override
-    protected void finalize() throws Throwable {
-        dispose();
-        super.finalize();
+    public final void close() {
+        cleanable.clean();
     }
 
     /**
@@ -35,7 +46,16 @@ public abstract class CefCookieManager {
     /**
      * Removes the native reference from an unused object.
      */
-    public abstract void dispose();
+    public final void dispose() {
+        cleanable.clean();
+    }
+
+    /**
+     * Provides cleanup access for subclasses to update the native handle.
+     */
+    protected final NativeCleanup getCleanup() {
+        return cleanup;
+    }
 
     /**
      * Visit all cookies. The returned cookies are ordered by longest path, then by earliest

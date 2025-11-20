@@ -13,5 +13,5 @@ else
   fi
 
   # Create README.txt
-  python "${DIR}"/tools/make_readme.py --output-dir "$DISTRIB_PATH/" --platform $1
+  python3 "${DIR}"/tools/make_readme.py --output-dir "$DISTRIB_PATH/" --platform $1
 fi

@@ -126,7 +126,6 @@ public class DownloadDialog extends JDialog implements CefDownloadHandler {
                 owner_.toBack();
                 isHidden_ = false;
             }
-            Runtime.getRuntime().runFinalization();
 
             callback_ = callback;
             status_.setText(rcvBytes + " of " + totalBytes + " - " + percentComplete + "%"

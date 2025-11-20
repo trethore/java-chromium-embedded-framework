@@ -5,6 +5,10 @@
 package org.cef.browser;
 
 import org.cef.handler.CefMessageRouterHandler;
+import org.cef.misc.CefCleaner;
+import org.cef.misc.NativeCleanup;
+
+import java.lang.ref.Cleaner.Cleanable;
 
 /**
  * The below classes implement support for routing aynchronous messages between
@@ -141,8 +145,25 @@ import org.cef.handler.CefMessageRouterHandler;
  *
  * 6. Notice that the success callback is executed in JavaScript.
  */
-public abstract class CefMessageRouter {
+public abstract class CefMessageRouter implements AutoCloseable {
+    private final NativeCleanup cleanup;
+    private final Cleanable cleanable;
     private CefMessageRouterConfig routerConfig_ = null;
+
+    // This CTOR can't be called directly. Call method create() instead.
+    CefMessageRouter(NativeCleanup cleanup) {
+        this(cleanup, true);
+    }
+
+    CefMessageRouter(NativeCleanup cleanup, boolean registerCleaner) {
+        this.cleanup = cleanup;
+        cleanable = registerCleaner ? CefCleaner.register(this, cleanup) : CefCleaner.noop();
+    }
+
+    @Override
+    public final void close() {
+        cleanable.clean();
+    }
 
     /**
      * Used to configure the query router. If using multiple router pairs make
@@ -169,15 +190,6 @@ public abstract class CefMessageRouter {
             jsQueryFunction = queryFunction;
             jsCancelFunction = cancelFunction;
         }
-    }
-
-    // This CTOR can't be called directly. Call method create() instead.
-    CefMessageRouter() {}
-
-    @Override
-    protected void finalize() throws Throwable {
-        dispose();
-        super.finalize();
     }
 
     /**
@@ -216,7 +228,16 @@ public abstract class CefMessageRouter {
     /**
      * Must be called if the CefMessageRouter instance isn't used any more.
      */
-    public abstract void dispose();
+    public final void dispose() {
+        cleanable.clean();
+    }
+
+    /**
+     * Provides cleanup access for subclasses to update the native handle.
+     */
+    protected final NativeCleanup getCleanup() {
+        return cleanup;
+    }
 
     // Called from native code during handling of createNative().
     void setMessageRouterConfig(CefMessageRouterConfig config) {

@@ -5,24 +5,33 @@
 package org.cef.network;
 
 import org.cef.handler.CefLoadHandler.ErrorCode;
-
+import org.cef.misc.CefCleaner;
+import org.cef.misc.NativeCleanup;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * Class used to represent a web response. The methods of this class may be
- * called on any thread.
+ * Class used to represent a web response. The methods of this class may be called on any thread.
  */
-public abstract class CefResponse {
+public abstract class CefResponse implements AutoCloseable {
+    private final NativeCleanup cleanup;
+    private final java.lang.ref.Cleaner.Cleanable cleanable;
+
     // This CTOR can't be called directly. Call method create() instead.
-    CefResponse() {}
+    CefResponse(NativeCleanup cleanup) {
+        this(cleanup, true);
+    }
+
+    CefResponse(NativeCleanup cleanup, boolean registerCleaner) {
+        this.cleanup = cleanup;
+        cleanable = registerCleaner ? CefCleaner.register(this, cleanup) : CefCleaner.noop();
+    }
 
     @Override
-    protected void finalize() throws Throwable {
-        dispose();
-        super.finalize();
+    public final void close() {
+        cleanable.clean();
     }
 
     /**
@@ -35,7 +44,16 @@ public abstract class CefResponse {
     /**
      * Removes the native reference from an unused object.
      */
-    public abstract void dispose();
+    public final void dispose() {
+        cleanable.clean();
+    }
+
+    /**
+     * Provides cleanup access for subclasses to update the native handle.
+     */
+    protected final NativeCleanup getCleanup() {
+        return cleanup;
+    }
 
     /**
      * Returns true if this object is read-only.

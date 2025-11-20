@@ -13,11 +13,21 @@ import java.util.Vector;
 class CefCookieManager_N extends CefCookieManager implements CefNative {
     // Used internally to store a pointer to the CEF object.
     private long N_CefHandle = 0;
+    private static final class NativeDisposer {
+        private static final CefCookieManager_N INVOKER = new CefCookieManager_N(false);
+
+        private static void dispose(long handle) {
+            if (handle != 0) {
+                INVOKER.disposeHandle(handle);
+            }
+        }
+    }
     private static CefCookieManager_N globalInstance = null;
 
     @Override
     public void setNativeRef(String identifer, long nativeRef) {
         N_CefHandle = nativeRef;
+        getCleanup().setHandle(nativeRef);
     }
 
     @Override
@@ -26,7 +36,11 @@ class CefCookieManager_N extends CefCookieManager implements CefNative {
     }
 
     CefCookieManager_N() {
-        super();
+        this(true);
+    }
+
+    private CefCookieManager_N(boolean registerCleaner) {
+        super(new org.cef.misc.NativeCleanup(NativeDisposer::dispose), registerCleaner);
     }
 
     static synchronized final CefCookieManager_N getGlobalManagerNative() {
@@ -46,10 +60,9 @@ class CefCookieManager_N extends CefCookieManager implements CefNative {
         return globalInstance;
     }
 
-    @Override
-    public void dispose() {
+    private void disposeHandle(long handle) {
         try {
-            N_Dispose(N_CefHandle);
+            N_Dispose(handle);
         } catch (UnsatisfiedLinkError ule) {
             ule.printStackTrace();
         }

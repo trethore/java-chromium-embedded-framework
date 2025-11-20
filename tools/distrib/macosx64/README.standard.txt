@@ -11,7 +11,7 @@ tests       Contains the MainFrame sample application.
 USAGE
 -----
 
-1. Install a 64-bit version of the Oracle Java 7 runtime.
+1. Install a 64-bit version of the Java 17 runtime.
 2. Launch jcef_app to run the MainFrame sample application.
 3. Optionally recompile the sample application and update jcef-tests.jar
    in the jcef_app bundle by running the compile.sh script.

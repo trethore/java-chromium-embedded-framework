@@ -5,6 +5,7 @@
 package org.cef.misc;
 
 import org.cef.callback.CefNative;
+import org.cef.misc.NativeCleanup;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -13,10 +14,20 @@ import java.util.Vector;
 class CefPrintSettings_N extends CefPrintSettings implements CefNative {
     // Used internally to store a pointer to the CEF object.
     private long N_CefHandle = 0;
+    private static final class NativeDisposer {
+        private static final CefPrintSettings_N INVOKER = new CefPrintSettings_N(false);
+
+        private static void dispose(long handle) {
+            if (handle != 0) {
+                INVOKER.disposeHandle(handle);
+            }
+        }
+    }
 
     @Override
     public void setNativeRef(String identifer, long nativeRef) {
         N_CefHandle = nativeRef;
+        getCleanup().setHandle(nativeRef);
     }
 
     @Override
@@ -25,7 +36,11 @@ class CefPrintSettings_N extends CefPrintSettings implements CefNative {
     }
 
     CefPrintSettings_N() {
-        super();
+        this(true);
+    }
+
+    private CefPrintSettings_N(boolean registerCleaner) {
+        super(new NativeCleanup(NativeDisposer::dispose), registerCleaner);
     }
 
     public static CefPrintSettings createNative() {
@@ -37,10 +52,9 @@ class CefPrintSettings_N extends CefPrintSettings implements CefNative {
         }
     }
 
-    @Override
-    public void dispose() {
+    private void disposeHandle(long handle) {
         try {
-            N_Dispose(N_CefHandle);
+            N_Dispose(handle);
         } catch (UnsatisfiedLinkError ule) {
             ule.printStackTrace();
         }
