@@ -32,9 +32,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.WindowEvent;
 import java.lang.ref.Cleaner.Cleanable;
-import java.lang.ref.WeakReference;
 import java.util.Vector;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.swing.SwingUtilities;
 
@@ -56,20 +56,25 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
     private volatile boolean isClosed_ = false;
     private volatile boolean isClosing_ = false;
     private final CefBrowserSettings settings_;
+    private final BrowserCleanup browserCleanup;
     private final Cleanable cleanable;
 
     private static final class BrowserCleanup implements Runnable {
-        private final WeakReference<CefBrowser_N> ref;
+        private final AtomicLong nativeHandle = new AtomicLong();
 
-        private BrowserCleanup(CefBrowser_N browser) {
-            ref = new WeakReference<>(browser);
+        private void setHandle(long handle) {
+            nativeHandle.set(handle);
+        }
+
+        private void clearHandle() {
+            nativeHandle.set(0);
         }
 
         @Override
         public void run() {
-            CefBrowser_N browser = ref.get();
-            if (browser != null) {
-                browser.close(true);
+            long handle = nativeHandle.getAndSet(0);
+            if (handle != 0) {
+                closeBrowser(handle);
             }
         }
     }
@@ -85,7 +90,14 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
             settings_ = settings.clone();
         else
             settings_ = new CefBrowserSettings();
-        cleanable = CefCleaner.register(this, new BrowserCleanup(this));
+        browserCleanup = new BrowserCleanup();
+        cleanable = CefCleaner.register(this, browserCleanup);
+    }
+
+    @Override
+    public void setNativeRef(String identifer, long nativeRef) {
+        super.setNativeRef(identifer, nativeRef);
+        browserCleanup.setHandle(nativeRef);
     }
 
     protected String getUrl() {
@@ -163,6 +175,7 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
         if (devToolsClient_ != null) {
             devToolsClient_.close();
         }
+        browserCleanup.clearHandle();
     }
 
     @Override
@@ -208,6 +221,13 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
 
     protected abstract CefBrowser_N createDevToolsBrowser(CefClient client, String url,
             CefRequestContext context, CefBrowser_N parent, Point inspectAt);
+    private static void closeBrowser(long nativeHandle) {
+        try {
+            N_CloseBrowser(nativeHandle);
+        } catch (UnsatisfiedLinkError ule) {
+            ule.printStackTrace();
+        }
+    }
 
     /**
      * Create a new browser.
@@ -932,4 +952,5 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
     private final native void N_NotifyMoveOrResizeStarted();
     private final native void N_SetWindowlessFrameRate(int frameRate);
     private final native void N_GetWindowlessFrameRate(IntCallback frameRateCallback);
+    private static native void N_CloseBrowser(long nativeHandle);
 }

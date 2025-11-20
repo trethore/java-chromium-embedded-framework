@@ -1596,12 +1596,13 @@ Java_org_cef_browser_CefBrowser_1N_N_1GetURL(JNIEnv* env, jobject obj) {
   return NewJNIString(env, browser->GetMainFrame()->GetURL());
 }
 
-JNIEXPORT void JNICALL
-Java_org_cef_browser_CefBrowser_1N_N_1Close(JNIEnv* env,
-                                            jobject obj,
-                                            jboolean force) {
-  CefRefPtr<CefBrowser> browser = JNI_GET_BROWSER_OR_RETURN(env, obj);
-  if (force != JNI_FALSE) {
+namespace {
+
+void CloseBrowser(CefRefPtr<CefBrowser> browser, bool force) {
+  if (!browser)
+    return;
+
+  if (force) {
     if (browser->GetHost()->IsWindowRenderingDisabled()) {
       browser->GetHost()->CloseBrowser(true);
     } else {
@@ -1614,6 +1615,23 @@ Java_org_cef_browser_CefBrowser_1N_N_1Close(JNIEnv* env,
   } else {
     browser->GetHost()->CloseBrowser(false);
   }
+}
+
+}  // namespace
+
+JNIEXPORT void JNICALL
+Java_org_cef_browser_CefBrowser_1N_N_1CloseBrowser(JNIEnv* env,
+                                                   jclass,
+                                                   jlong nativeHandle) {
+  CloseBrowser(reinterpret_cast<CefBrowser*>(nativeHandle), true);
+}
+
+JNIEXPORT void JNICALL
+Java_org_cef_browser_CefBrowser_1N_N_1Close(JNIEnv* env,
+                                            jobject obj,
+                                            jboolean force) {
+  CefRefPtr<CefBrowser> browser = JNI_GET_BROWSER_OR_RETURN(env, obj);
+  CloseBrowser(browser, force != JNI_FALSE);
 }
 
 JNIEXPORT void JNICALL

@@ -285,6 +285,14 @@ JNIEXPORT jstring JNICALL Java_org_cef_browser_CefBrowser_1N_N_1GetURL(JNIEnv*,
 
 /*
  * Class:     org_cef_browser_CefBrowser_N
+ * Method:    N_CloseBrowser
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL
+Java_org_cef_browser_CefBrowser_1N_N_1CloseBrowser(JNIEnv*, jclass, jlong);
+
+/*
+ * Class:     org_cef_browser_CefBrowser_N
  * Method:    N_Close
  * Signature: (Z)V
  */
