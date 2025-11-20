@@ -73,7 +73,6 @@ public interface CefResourceHandler {
      * @deprecated Use read() instead
      */
     @Deprecated
-
     boolean readResponse(byte[] dataOut, int bytesToRead, IntRef bytesRead, CefCallback callback);
 
     /**
