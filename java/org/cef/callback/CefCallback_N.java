@@ -4,17 +4,50 @@
 
 package org.cef.callback;
 
-class CefCallback_N extends CefNativeAdapter implements CefCallback {
-    CefCallback_N() {}
+import org.cef.misc.NativeCleanup;
 
-    @Override
-    protected void finalize() throws Throwable {
-        cancel();
-        super.finalize();
+import java.util.concurrent.atomic.AtomicBoolean;
+
+class CefCallback_N extends CefNativeAdapter implements CefCallback {
+    private static final class NativeDisposer {
+        private static final CefCallback_N INVOKER = new CefCallback_N(false);
+
+        private static void dispose(long handle) {
+            if (handle != 0) {
+                INVOKER.cancelHandle(handle);
+            }
+        }
+    }
+
+    private final AtomicBoolean completed = new AtomicBoolean(false);
+
+    CefCallback_N() {
+        super(new NativeCleanup(NativeDisposer::dispose));
+    }
+
+    private CefCallback_N(boolean registerCleaner) {
+        super(new NativeCleanup(NativeDisposer::dispose), registerCleaner);
     }
 
     @Override
     public void Continue() {
+        if (completed.compareAndSet(false, true)) {
+            continueInternal();
+            if (getCleanup() != null) getCleanup().markCleaned();
+        }
+        if (getCleanup() != null) getCleanup().clean();
+    }
+
+    @Override
+    public void cancel() {
+        if (completed.compareAndSet(false, true)) {
+            cancelInternal();
+            if (getCleanup() != null) getCleanup().markCleaned();
+        }
+        if (getCleanup() != null) getCleanup().clean();
+    }
+
+    private void continueInternal() {
         try {
             N_Continue(getNativeRef(null));
         } catch (UnsatisfiedLinkError ule) {
@@ -22,10 +55,13 @@ class CefCallback_N extends CefNativeAdapter implements CefCallback {
         }
     }
 
-    @Override
-    public void cancel() {
+    private void cancelInternal() {
+        cancelHandle(getNativeRef(null));
+    }
+
+    private void cancelHandle(long handle) {
         try {
-            N_Cancel(getNativeRef(null));
+            N_Cancel(handle);
         } catch (UnsatisfiedLinkError ule) {
             ule.printStackTrace();
         }

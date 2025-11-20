@@ -4,19 +4,47 @@
 
 package org.cef.callback;
 
-class CefPrintJobCallback_N extends CefNativeAdapter implements CefPrintJobCallback {
-    CefPrintJobCallback_N() {}
+import org.cef.misc.NativeCleanup;
 
-    @Override
-    protected void finalize() throws Throwable {
-        Continue();
-        super.finalize();
+import java.util.concurrent.atomic.AtomicBoolean;
+
+class CefPrintJobCallback_N extends CefNativeAdapter implements CefPrintJobCallback {
+    private static final class NativeDisposer {
+        private static final CefPrintJobCallback_N INVOKER = new CefPrintJobCallback_N(false);
+
+        private static void dispose(long handle) {
+            if (handle != 0) {
+                INVOKER.continueHandle(handle);
+            }
+        }
+    }
+
+    private final AtomicBoolean resolved = new AtomicBoolean(false);
+
+    CefPrintJobCallback_N() {
+        super(new NativeCleanup(NativeDisposer::dispose));
+    }
+
+    private CefPrintJobCallback_N(boolean registerCleaner) {
+        super(new NativeCleanup(NativeDisposer::dispose), registerCleaner);
     }
 
     @Override
     public void Continue() {
+        if (resolved.compareAndSet(false, true)) {
+            continueInternal();
+            getCleanup().markCleaned();
+        }
+        getCleanup().clean();
+    }
+
+    private void continueInternal() {
+        continueHandle(getNativeRef(null));
+    }
+
+    private void continueHandle(long handle) {
         try {
-            N_Continue(getNativeRef(null));
+            N_Continue(handle);
         } catch (UnsatisfiedLinkError ule) {
             ule.printStackTrace();
         }

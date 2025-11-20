@@ -4,20 +4,31 @@
 
 package org.cef.network;
 
+import org.cef.misc.CefCleaner;
+import org.cef.misc.NativeCleanup;
 import java.util.Vector;
 
 /**
- * Class used to represent post data for a web request. The methods of this
- * class may be called on any thread.
+ * Class used to represent post data for a web request. The methods of this class may be called on
+ * any thread.
  */
-public abstract class CefPostData {
+public abstract class CefPostData implements AutoCloseable {
+    private final NativeCleanup cleanup;
+    private final java.lang.ref.Cleaner.Cleanable cleanable;
+
     // This CTOR can't be called directly. Call method create() instead.
-    CefPostData() {}
+    CefPostData(NativeCleanup cleanup) {
+        this(cleanup, true);
+    }
+
+    CefPostData(NativeCleanup cleanup, boolean registerCleaner) {
+        this.cleanup = cleanup;
+        cleanable = registerCleaner ? CefCleaner.register(this, cleanup) : CefCleaner.noop();
+    }
 
     @Override
-    protected void finalize() throws Throwable {
-        dispose();
-        super.finalize();
+    public final void close() {
+        cleanable.clean();
     }
 
     /**
@@ -30,7 +41,16 @@ public abstract class CefPostData {
     /**
      * Removes the native reference from an unused object.
      */
-    public abstract void dispose();
+    public final void dispose() {
+        cleanable.clean();
+    }
+
+    /**
+     * Provides cleanup access for subclasses to update the native handle.
+     */
+    protected final NativeCleanup getCleanup() {
+        return cleanup;
+    }
 
     /**
      * Returns true if this object is read-only.

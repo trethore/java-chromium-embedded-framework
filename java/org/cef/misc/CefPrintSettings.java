@@ -11,7 +11,20 @@ import java.util.Vector;
 /**
  * Class representing print settings.
  */
-public abstract class CefPrintSettings {
+public abstract class CefPrintSettings implements AutoCloseable {
+    private final NativeCleanup cleanup;
+    private final java.lang.ref.Cleaner.Cleanable cleanable;
+
+    // This CTOR can't be called directly. Call method create() instead.
+    CefPrintSettings(NativeCleanup cleanup) {
+        this(cleanup, true);
+    }
+
+    CefPrintSettings(NativeCleanup cleanup, boolean registerCleaner) {
+        this.cleanup = cleanup;
+        cleanable = registerCleaner ? CefCleaner.register(this, cleanup) : CefCleaner.noop();
+    }
+
     /**
      * Print job color mode values.
      */
@@ -50,12 +63,9 @@ public abstract class CefPrintSettings {
     }
 
     // This CTOR can't be called directly. Call method create() instead.
-    CefPrintSettings() {}
-
     @Override
-    protected void finalize() throws Throwable {
-        dispose();
-        super.finalize();
+    public final void close() {
+        cleanable.clean();
     }
 
     /**
@@ -68,7 +78,16 @@ public abstract class CefPrintSettings {
     /**
      * Removes the native reference from an unused object.
      */
-    public abstract void dispose();
+    public final void dispose() {
+        cleanable.clean();
+    }
+
+    /**
+     * Provides cleanup access for subclasses to update the native handle.
+     */
+    protected final NativeCleanup getCleanup() {
+        return cleanup;
+    }
 
     /**
      * Returns true if this object is valid. Do not call any other methods if this

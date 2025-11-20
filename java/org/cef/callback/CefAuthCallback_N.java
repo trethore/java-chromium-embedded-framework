@@ -4,17 +4,50 @@
 
 package org.cef.callback;
 
-class CefAuthCallback_N extends CefNativeAdapter implements CefAuthCallback {
-    CefAuthCallback_N() {}
+import org.cef.misc.NativeCleanup;
 
-    @Override
-    protected void finalize() throws Throwable {
-        cancel();
-        super.finalize();
+import java.util.concurrent.atomic.AtomicBoolean;
+
+class CefAuthCallback_N extends CefNativeAdapter implements CefAuthCallback {
+    private static final class NativeDisposer {
+        private static final CefAuthCallback_N INVOKER = new CefAuthCallback_N(false);
+
+        private static void dispose(long handle) {
+            if (handle != 0) {
+                INVOKER.cancelHandle(handle);
+            }
+        }
+    }
+
+    private final AtomicBoolean resolved = new AtomicBoolean(false);
+
+    CefAuthCallback_N() {
+        super(new NativeCleanup(NativeDisposer::dispose));
+    }
+
+    private CefAuthCallback_N(boolean registerCleaner) {
+        super(new NativeCleanup(NativeDisposer::dispose), registerCleaner);
     }
 
     @Override
     public void Continue(String username, String password) {
+        if (resolved.compareAndSet(false, true)) {
+            continueInternal(username, password);
+            getCleanup().markCleaned();
+        }
+        getCleanup().clean();
+    }
+
+    @Override
+    public void cancel() {
+        if (resolved.compareAndSet(false, true)) {
+            cancelInternal();
+            getCleanup().markCleaned();
+        }
+        getCleanup().clean();
+    }
+
+    private void continueInternal(String username, String password) {
         try {
             N_Continue(getNativeRef(null), username, password);
         } catch (UnsatisfiedLinkError ule) {
@@ -22,10 +55,13 @@ class CefAuthCallback_N extends CefNativeAdapter implements CefAuthCallback {
         }
     }
 
-    @Override
-    public void cancel() {
+    private void cancelInternal() {
+        cancelHandle(getNativeRef(null));
+    }
+
+    private void cancelHandle(long handle) {
         try {
-            N_Cancel(getNativeRef(null));
+            N_Cancel(handle);
         } catch (UnsatisfiedLinkError ule) {
             ule.printStackTrace();
         }

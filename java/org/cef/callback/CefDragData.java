@@ -4,6 +4,9 @@
 
 package org.cef.callback;
 
+import org.cef.misc.CefCleaner;
+import org.cef.misc.NativeCleanup;
+
 import java.io.OutputStream;
 import java.util.Vector;
 
@@ -11,7 +14,19 @@ import java.util.Vector;
  * Class used to represent drag data. The methods of this class may be called
  * on any thread.
  */
-public abstract class CefDragData {
+public abstract class CefDragData implements AutoCloseable {
+    private final NativeCleanup cleanup;
+    private final java.lang.ref.Cleaner.Cleanable cleanable;
+
+    // This CTOR can't be called directly. Call method create() instead.
+    CefDragData(NativeCleanup cleanup) {
+        this(cleanup, true);
+    }
+
+    CefDragData(NativeCleanup cleanup, boolean registerCleaner) {
+        this.cleanup = cleanup;
+        cleanable = registerCleaner ? CefCleaner.register(this, cleanup) : CefCleaner.noop();
+    }
     /**
      * Supported drag operation bit flags.
      */
@@ -26,13 +41,16 @@ public abstract class CefDragData {
         public final static int DRAG_OPERATION_EVERY = Integer.MAX_VALUE;
     }
 
-    // This CTOR can't be called directly. Call method create() instead.
-    CefDragData() {}
-
     @Override
-    protected void finalize() throws Throwable {
-        dispose();
-        super.finalize();
+    public final void close() {
+        cleanable.clean();
+    }
+
+    /**
+     * Removes the native reference from an unused object.
+     */
+    public final void dispose() {
+        cleanable.clean();
     }
 
     /**
@@ -50,7 +68,9 @@ public abstract class CefDragData {
     /**
      * Removes the native reference from an unused object.
      */
-    public abstract void dispose();
+    protected final NativeCleanup getCleanup() {
+        return cleanup;
+    }
 
     /**
      * Test if the object is set to read-only.

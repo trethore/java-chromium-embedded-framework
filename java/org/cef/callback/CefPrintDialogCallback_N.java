@@ -4,19 +4,52 @@
 
 package org.cef.callback;
 
+import org.cef.misc.NativeCleanup;
 import org.cef.misc.CefPrintSettings;
 
-class CefPrintDialogCallback_N extends CefNativeAdapter implements CefPrintDialogCallback {
-    CefPrintDialogCallback_N() {}
+import java.util.concurrent.atomic.AtomicBoolean;
 
-    @Override
-    protected void finalize() throws Throwable {
-        cancel();
-        super.finalize();
+class CefPrintDialogCallback_N extends CefNativeAdapter implements CefPrintDialogCallback {
+    private static final class NativeDisposer {
+        private static final CefPrintDialogCallback_N INVOKER =
+                new CefPrintDialogCallback_N(false);
+
+        private static void dispose(long handle) {
+            if (handle != 0) {
+                INVOKER.cancelHandle(handle);
+            }
+        }
+    }
+
+    private final AtomicBoolean resolved = new AtomicBoolean(false);
+
+    CefPrintDialogCallback_N() {
+        super(new NativeCleanup(NativeDisposer::dispose));
+    }
+
+    private CefPrintDialogCallback_N(boolean registerCleaner) {
+        super(new NativeCleanup(NativeDisposer::dispose), registerCleaner);
     }
 
     @Override
     public void Continue(CefPrintSettings settings) {
+        if (resolved.compareAndSet(false, true)) {
+            continueInternal(settings);
+            getCleanup().markCleaned();
+        }
+        getCleanup().clean();
+    }
+
+    @Override
+    public void cancel() {
+        if (resolved.compareAndSet(false, true)) {
+            cancelInternal();
+            getCleanup().markCleaned();
+        }
+        getCleanup().clean();
+    }
+
+    private void continueInternal(CefPrintSettings settings) {
         try {
             N_Continue(getNativeRef(null), settings);
         } catch (UnsatisfiedLinkError ule) {
@@ -24,10 +57,13 @@ class CefPrintDialogCallback_N extends CefNativeAdapter implements CefPrintDialo
         }
     }
 
-    @Override
-    public void cancel() {
+    private void cancelInternal() {
+        cancelHandle(getNativeRef(null));
+    }
+
+    private void cancelHandle(long handle) {
         try {
-            N_Cancel(getNativeRef(null));
+            N_Cancel(handle);
         } catch (UnsatisfiedLinkError ule) {
             ule.printStackTrace();
         }

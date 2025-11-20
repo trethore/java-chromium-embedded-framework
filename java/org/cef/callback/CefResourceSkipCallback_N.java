@@ -8,11 +8,6 @@ class CefResourceSkipCallback_N extends CefNativeAdapter implements CefResourceS
     CefResourceSkipCallback_N() {}
 
     @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-    }
-
-    @Override
     public void Continue(long bytes_skipped) {
         try {
             N_Continue(getNativeRef(null), bytes_skipped);

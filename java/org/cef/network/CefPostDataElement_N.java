@@ -9,10 +9,20 @@ import org.cef.callback.CefNative;
 class CefPostDataElement_N extends CefPostDataElement implements CefNative {
     // Used internally to store a pointer to the CEF object.
     private long N_CefHandle = 0;
+    private static final class NativeDisposer {
+        private static final CefPostDataElement_N INVOKER = new CefPostDataElement_N(false);
+
+        private static void dispose(long handle) {
+            if (handle != 0) {
+                INVOKER.disposeHandle(handle);
+            }
+        }
+    }
 
     @Override
     public void setNativeRef(String identifer, long nativeRef) {
         N_CefHandle = nativeRef;
+        getCleanup().setHandle(nativeRef);
     }
 
     @Override
@@ -21,7 +31,11 @@ class CefPostDataElement_N extends CefPostDataElement implements CefNative {
     }
 
     CefPostDataElement_N() {
-        super();
+        this(true);
+    }
+
+    private CefPostDataElement_N(boolean registerCleaner) {
+        super(new org.cef.misc.NativeCleanup(NativeDisposer::dispose), registerCleaner);
     }
 
     public static CefPostDataElement createNative() {
@@ -33,10 +47,9 @@ class CefPostDataElement_N extends CefPostDataElement implements CefNative {
         }
     }
 
-    @Override
-    public void dispose() {
+    private void disposeHandle(long handle) {
         try {
-            N_Dispose(N_CefHandle);
+            N_Dispose(handle);
         } catch (UnsatisfiedLinkError ule) {
             ule.printStackTrace();
         }

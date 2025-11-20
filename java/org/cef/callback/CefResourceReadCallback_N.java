@@ -13,11 +13,6 @@ class CefResourceReadCallback_N extends CefNativeAdapter implements CefResourceR
 
     CefResourceReadCallback_N() {}
 
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-    }
-
     public void setBufferRefs(long nativeBufferRef, byte[] javaBuffer) {
         N_NativeBufferRef = nativeBufferRef;
         N_JavaBuffer = javaBuffer;

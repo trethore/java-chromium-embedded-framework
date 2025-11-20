@@ -6,14 +6,25 @@ package org.cef.browser;
 
 import org.cef.callback.CefNative;
 import org.cef.handler.CefMessageRouterHandler;
+import org.cef.misc.NativeCleanup;
 
 class CefMessageRouter_N extends CefMessageRouter implements CefNative {
     // Used internally to store a pointer to the CEF object.
     private long N_CefHandle = 0;
+    private static final class NativeDisposer {
+        private static final CefMessageRouter_N INVOKER = new CefMessageRouter_N(false);
+
+        private static void dispose(long handle) {
+            if (handle != 0) {
+                INVOKER.disposeHandle(handle);
+            }
+        }
+    }
 
     @Override
     public void setNativeRef(String identifer, long nativeRef) {
         N_CefHandle = nativeRef;
+        getCleanup().setHandle(nativeRef);
     }
 
     @Override
@@ -22,7 +33,7 @@ class CefMessageRouter_N extends CefMessageRouter implements CefNative {
     }
 
     private CefMessageRouter_N() {
-        super();
+        this(true);
     }
 
     public static final CefMessageRouter createNative(CefMessageRouterConfig config) {
@@ -34,10 +45,13 @@ class CefMessageRouter_N extends CefMessageRouter implements CefNative {
         }
     }
 
-    @Override
-    public void dispose() {
+    private CefMessageRouter_N(boolean registerCleaner) {
+        super(new org.cef.misc.NativeCleanup(NativeDisposer::dispose), registerCleaner);
+    }
+
+    private void disposeHandle(long handle) {
         try {
-            N_Dispose(N_CefHandle);
+            N_Dispose(handle);
         } catch (UnsatisfiedLinkError ule) {
             ule.printStackTrace();
         }

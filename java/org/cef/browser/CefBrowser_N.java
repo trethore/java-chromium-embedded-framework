@@ -19,6 +19,7 @@ import org.cef.handler.CefWindowHandler;
 import org.cef.event.CefKeyEvent;
 import org.cef.event.CefMouseEvent;
 import org.cef.event.CefMouseWheelEvent;
+import org.cef.misc.CefCleaner;
 import org.cef.misc.CefPdfPrintSettings;
 import org.cef.network.CefRequest;
 
@@ -30,6 +31,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.WindowEvent;
+import java.lang.ref.Cleaner.Cleanable;
+import java.lang.ref.WeakReference;
 import java.util.Vector;
 import java.util.concurrent.CompletableFuture;
 
@@ -53,6 +56,23 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
     private volatile boolean isClosed_ = false;
     private volatile boolean isClosing_ = false;
     private final CefBrowserSettings settings_;
+    private final Cleanable cleanable;
+
+    private static final class BrowserCleanup implements Runnable {
+        private final WeakReference<CefBrowser_N> ref;
+
+        private BrowserCleanup(CefBrowser_N browser) {
+            ref = new WeakReference<>(browser);
+        }
+
+        @Override
+        public void run() {
+            CefBrowser_N browser = ref.get();
+            if (browser != null) {
+                browser.close(true);
+            }
+        }
+    }
 
     protected CefBrowser_N(CefClient client, String url, CefRequestContext context,
             CefBrowser_N parent, Point inspectAt, CefBrowserSettings settings) {
@@ -65,6 +85,7 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
             settings_ = settings.clone();
         else
             settings_ = new CefBrowserSettings();
+        cleanable = CefCleaner.register(this, new BrowserCleanup(this));
     }
 
     protected String getUrl() {
@@ -236,12 +257,6 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
             err.printStackTrace();
         }
         return 0;
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        close(true);
-        super.finalize();
     }
 
     @Override

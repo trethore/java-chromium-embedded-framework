@@ -4,16 +4,30 @@
 
 package org.cef.network;
 
+import org.cef.misc.CefCleaner;
+import org.cef.misc.NativeCleanup;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * Class used to represent a web request. The methods of this class may be
- * called on any thread.
+ * Class used to represent a web request. The methods of this class may be called on any thread.
  */
-public abstract class CefRequest {
+public abstract class CefRequest implements AutoCloseable {
+    private final NativeCleanup cleanup;
+    private final java.lang.ref.Cleaner.Cleanable cleanable;
+
+    // This CTOR can't be called directly. Call method create() instead.
+    CefRequest(NativeCleanup cleanup) {
+        this(cleanup, true);
+    }
+
+    CefRequest(NativeCleanup cleanup, boolean registerCleaner) {
+        this.cleanup = cleanup;
+        this.cleanable = registerCleaner ? CefCleaner.register(this, cleanup) : CefCleaner.noop();
+    }
     /**
      * Resource type for a request.
      */
@@ -321,13 +335,23 @@ public abstract class CefRequest {
         REFERRER_POLICY_NUM_VALUES
     }
 
-    // This CTOR can't be called directly. Call method create() instead.
-    CefRequest() {}
-
     @Override
-    protected void finalize() throws Throwable {
-        dispose();
-        super.finalize();
+    public final void close() {
+        cleanable.clean();
+    }
+
+    /**
+     * Removes the native reference from an unused object.
+     */
+    public final void dispose() {
+        cleanable.clean();
+    }
+
+    /**
+     * Provides cleanup access for subclasses to update the native handle.
+     */
+    protected final NativeCleanup getCleanup() {
+        return cleanup;
     }
 
     /**
@@ -336,11 +360,6 @@ public abstract class CefRequest {
     public static final CefRequest create() {
         return CefRequest_N.createNative();
     }
-
-    /**
-     * Removes the native reference from an unused object.
-     */
-    public abstract void dispose();
 
     /**
      * Returns the globally unique identifier for this request or 0 if not

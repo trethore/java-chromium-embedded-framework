@@ -4,17 +4,30 @@
 
 package org.cef.callback;
 
-class CefDownloadItemCallback_N extends CefNativeAdapter implements CefDownloadItemCallback {
-    CefDownloadItemCallback_N() {}
+import org.cef.misc.NativeCleanup;
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            N_Dispose(getNativeRef(null));
-        } catch (UnsatisfiedLinkError ule) {
-            ule.printStackTrace();
+class CefDownloadItemCallback_N extends CefNativeAdapter implements CefDownloadItemCallback {
+    private static final class NativeDisposer {
+        private static final CefDownloadItemCallback_N INVOKER =
+                new CefDownloadItemCallback_N(false);
+
+        private static void dispose(long handle) {
+            if (handle != 0) {
+                INVOKER.disposeHandle(handle);
+            }
         }
-        super.finalize();
+    }
+
+    CefDownloadItemCallback_N() {
+        super(new NativeCleanup(NativeDisposer::dispose));
+    }
+
+    private CefDownloadItemCallback_N(boolean registerCleaner) {
+        super(new NativeCleanup(NativeDisposer::dispose), registerCleaner);
+    }
+
+    public void dispose() {
+        if (getCleanup() != null) getCleanup().clean();
     }
 
     @Override
@@ -39,6 +52,14 @@ class CefDownloadItemCallback_N extends CefNativeAdapter implements CefDownloadI
     public void resume() {
         try {
             N_Resume(getNativeRef(null));
+        } catch (UnsatisfiedLinkError ule) {
+            ule.printStackTrace();
+        }
+    }
+
+    private void disposeHandle(long handle) {
+        try {
+            N_Dispose(handle);
         } catch (UnsatisfiedLinkError ule) {
             ule.printStackTrace();
         }
