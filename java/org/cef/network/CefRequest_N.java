@@ -50,7 +50,6 @@ class CefRequest_N extends CefRequest implements CefNative {
         }
     }
 
-    @Override
     private void disposeHandle(long handle) {
         try {
             N_Dispose(handle);
