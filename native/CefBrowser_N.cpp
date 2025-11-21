@@ -2172,7 +2172,10 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEventDirect(JNIEnv* env,
     CallStaticJNIMethodII_V(env, glfwCls, "glfwGetKeyScancode",
                             &scanCode, key_code);
   }
-  scanCode = MapScanCodeGLFW(env, glfwCls, key_char, scanCode);
+  // Use the GLFW key code (not the printable char) to recover a scancode so
+  // control/navigation keys work even when no scancode was provided or when
+  // key_char is 0 to suppress CHAR generation on KEY_PRESS/RELEASE.
+  scanCode = MapScanCodeGLFW(env, glfwCls, key_code, scanCode);
   BYTE VkCode = LOBYTE(MapVirtualKey(scanCode, MAPVK_VSC_TO_VK));
   cef_event.native_key_code = (scanCode << 16) |  // key scan code
                               1;                  // key repeat count
