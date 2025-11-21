@@ -2177,8 +2177,29 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEventDirect(JNIEnv* env,
   // key_char is 0 to suppress CHAR generation on KEY_PRESS/RELEASE.
   scanCode = MapScanCodeGLFW(env, glfwCls, key_code, scanCode);
   BYTE VkCode = LOBYTE(MapVirtualKey(scanCode, MAPVK_VSC_TO_VK));
-  cef_event.native_key_code = (scanCode << 16) |  // key scan code
-                              1;                  // key repeat count
+  // Character events coming from frameworks like Minecraft may only provide
+  // a Unicode codepoint with no GLFW key code or scancode; try to recover a
+  // virtual-key/scancode from the character so CEF can generate CHAR events.
+  if (VkCode == 0 && key_char != 0) {
+    SHORT vkScan = VkKeyScanW(static_cast<WCHAR>(key_char));
+    BYTE derivedVk = LOBYTE(vkScan);
+    if (derivedVk != 0xFF) {
+      VkCode = derivedVk;
+      LONG derivedScan = MapVirtualKey(VkCode, MAPVK_VK_TO_VSC);
+      if (derivedScan != 0)
+        scanCode = derivedScan;
+    }
+    // Ensure native_key_code is non-zero so downstream does not drop the event.
+  }
+  if (scanCode != 0) {
+    cef_event.native_key_code = (scanCode << 16) |  // key scan code
+                                1;                  // key repeat count
+  } else if (key_char != 0) {
+    // Provide a minimal non-zero native code so the event is not discarded.
+    cef_event.native_key_code = key_char;
+  } else {
+    cef_event.native_key_code = 1;  // default repeat count only
+  }
 #elif defined(OS_LINUX) || defined(OS_MACOSX)
   if (!CallJNIMethodI_V(env, objClass, key_event, "getKeyCode", &key_code)) {
     return;
@@ -2335,6 +2356,8 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEventDirect(JNIEnv* env,
   if (event_type == JNI_STATIC(GLFW_PRESS)) {
 #if defined(OS_WIN)
     cef_event.windows_key_code = VkCode;
+    if (cef_event.windows_key_code == 0 && key_char != 0)
+      cef_event.windows_key_code = key_char;  // fallback when only char exists
     cef_event.unmodified_character = key_char;
     cef_event.character = key_char;
 #endif
@@ -2350,6 +2373,8 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEventDirect(JNIEnv* env,
   } else if (event_type == JNI_STATIC(GLFW_RELEASE)) {
 #if defined(OS_WIN)
     cef_event.windows_key_code = VkCode;
+    if (cef_event.windows_key_code == 0 && key_char != 0)
+      cef_event.windows_key_code = key_char;
     cef_event.native_key_code |= 0xC0000000;
     cef_event.unmodified_character = key_char;
     cef_event.character = key_char;
@@ -2358,6 +2383,8 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEventDirect(JNIEnv* env,
   } else if (event_type == JNI_STATIC(GLFW_REPEAT)) {
 #if defined(OS_WIN)
     cef_event.windows_key_code = VkCode;
+    if (cef_event.windows_key_code == 0 && key_char != 0)
+      cef_event.windows_key_code = key_char;
     cef_event.unmodified_character = key_char;
     cef_event.character = key_char;
 #endif
