@@ -2368,6 +2368,14 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEventDirect(JNIEnv* env,
 
     // Emit a CHAR event on initial press so single key strokes produce text.
     if (key_char != 0) {
+#if defined(OS_WIN)
+      // For WM_CHAR the wParam contains the actual character code, not the
+      // virtual-key. Using the VK here causes CEF/DOM to see uppercase letters
+      // and wrong punctuation because it re-applies modifiers to the VK. Keep
+      // the VK for RAWKEYDOWN above, but switch to the real character code for
+      // the CHAR event.
+      cef_event.windows_key_code = key_char;
+#endif
       cef_event.type = KEYEVENT_CHAR;
       browser->GetHost()->SendKeyEvent(cef_event);
     }
@@ -2384,9 +2392,9 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEventDirect(JNIEnv* env,
     cef_event.type = KEYEVENT_KEYUP;
   } else if (event_type == JNI_STATIC(GLFW_REPEAT)) {
 #if defined(OS_WIN)
-    cef_event.windows_key_code = VkCode;
-    if (cef_event.windows_key_code == 0 && key_char != 0)
-      cef_event.windows_key_code = key_char;
+    // Repeat events should deliver a CHAR; use the character code in
+    // windows_key_code to match the semantics of WM_CHAR.
+    cef_event.windows_key_code = (key_char != 0) ? key_char : VkCode;
     cef_event.unmodified_character = key_char;
     cef_event.character = key_char;
 #endif
