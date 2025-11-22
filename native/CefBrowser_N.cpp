@@ -2194,11 +2194,13 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEventDirect(JNIEnv* env,
   if (scanCode != 0) {
     cef_event.native_key_code = (scanCode << 16) |  // key scan code
                                 1;                  // key repeat count
-  } else if (key_char != 0) {
-    // Provide a minimal non-zero native code so the event is not discarded.
-    cef_event.native_key_code = key_char;
   } else {
-    cef_event.native_key_code = 1;  // default repeat count only
+    // Fallback to a minimal repeat count with no scan code. Do not stuff the
+    // Unicode character into |native_key_code| because on Windows that value is
+    // interpreted as the lParam for WM_* messages (repeat count + scancode +
+    // flags) and putting a character there can confuse the downstream key
+    // translation, leading to incorrect casing (e.g. always uppercase).
+    cef_event.native_key_code = 1;
   }
 #elif defined(OS_LINUX) || defined(OS_MACOSX)
   if (!CallJNIMethodI_V(env, objClass, key_event, "getKeyCode", &key_code)) {
